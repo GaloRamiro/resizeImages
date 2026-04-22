@@ -3,12 +3,13 @@
 // =========================
 function previewFiles() {
   const preview = document.querySelector("#preview");
-  const files = document.querySelector("input[type=file]").files;
+  const files = document.getElementById("imageFile").files;
 
   preview.innerHTML = "";
   document.getElementById("image_select").innerHTML = "";
   document.getElementById("prev_span").innerText = "Choose an image";
-  if (files) {
+
+  if (files.length > 0) {
     [].forEach.call(files, readAndPreview);
   }
 }
@@ -32,7 +33,6 @@ function readAndPreview(file, index) {
       image.classList.add("active");
     }
 
-    // 🔥 CLICK PARA SELECCIONAR
     image.addEventListener("click", () => {
       document
         .querySelectorAll(".preview_img")
@@ -82,7 +82,7 @@ function resizeImage(max_width, max_height) {
 // =========================
 async function download_main() {
   const button = document.querySelector(".success");
-  const files = document.querySelector("input[type=file]").files;
+  const files = document.getElementById("imageFile").files;
 
   if (!files.length) {
     alert("Sube al menos una imagen");
@@ -98,40 +98,82 @@ async function download_main() {
   const progressBar = document.getElementById("progress_bar");
   const progressText = document.getElementById("progress_text");
 
-  let totalTasks = files.length * sizes.length;
+  let totalTasks = 0;
+
+  for (let file of files) {
+    let name = file.name.replace(/\.[^.$]+$/, "");
+    const isResizable = /-\d+_/.test(name);
+    totalTasks += isResizable ? sizes.length : 1;
+  }
+
   let completed = 0;
 
   progressBar.style.width = "0%";
   progressText.innerText = "Procesando imágenes...";
+
   const loader = document.getElementById("loader");
-  loader.classList.remove("hidden");
+  if (loader) loader.classList.remove("hidden");
+
   try {
-    // 🔥 TODO EL PROCESO VA AQUÍ
+    // =========================
+    // 🔥 DETECTAR CÓDIGO BASE AUTOMÁTICO
+    // =========================
+    let baseCodeGlobal = null;
+
     for (let file of files) {
       let name = file.name.replace(/\.[^.$]+$/, "");
-      let family = name.split("-")[0];
-      let folder = zip.folder(family);
 
+      if (!name.includes("-") && name.length > 13) {
+        baseCodeGlobal = name;
+        break;
+      }
+    }
+
+    // fallback por si no encuentra (seguridad)
+    if (!baseCodeGlobal) {
+      baseCodeGlobal = "sin_codigo";
+    }
+
+    // =========================
+    // PROCESAR ARCHIVOS
+    // =========================
+    for (let file of files) {
+      let name = file.name.replace(/\.[^.$]+$/, "");
+      const isResizable = /-\d+_/.test(name);
       const dataUrlOriginal = await readFile(file);
 
-      for (let size of sizes) {
-        let dataUrl = await resizeFromDataURL(dataUrlOriginal, size);
+      let baseCode;
 
-        let newName;
-        if (/-\d+_/.test(name)) {
-          newName = name.replace(/-\d+_/, "-" + size + "_") + ".webp";
-        } else {
-          newName = name + "_" + size + ".webp";
-        }
-
-        folder.file(newName, dataUrl.split(",")[1], { base64: true });
-
-        completed++;
-        let percent = Math.round((completed / totalTasks) * 100);
-
-        progressBar.style.width = percent + "%";
-        progressText.innerText = percent + "% procesado";
+      if (isResizable) {
+        baseCode = name.split("-")[0];
+      } else {
+        baseCode = baseCodeGlobal;
       }
+
+      let folder = zip.folder("imagenes/" + baseCode);
+
+      if (!isResizable) {
+        folder.file(name + ".webp", dataUrlOriginal.split(",")[1], {
+          base64: true,
+        });
+        completed++;
+      } else {
+        for (let size of sizes) {
+          let dataUrl = await resizeFromDataURL(dataUrlOriginal, size);
+
+          let newName = name.replace(/-\d+_/, "-" + size + "_") + ".webp";
+
+          folder.file(newName, dataUrl.split(",")[1], {
+            base64: true,
+          });
+
+          completed++;
+        }
+      }
+
+      let percent = Math.round((completed / totalTasks) * 100);
+      progressBar.style.width = percent + "%";
+      progressText.innerText = percent + "% procesado";
     }
 
     progressText.innerText = "Comprimiendo...";
@@ -155,12 +197,10 @@ async function download_main() {
     console.error(error);
     progressText.innerText = "❌ Error al procesar imágenes";
   } finally {
-    // 🔥 SIEMPRE SE EJECUTA
     button.disabled = false;
     button.innerText = "Download Images";
+    if (loader) loader.classList.add("hidden");
   }
-
-  loader.classList.add("hidden");
 }
 
 // =========================
@@ -210,7 +250,7 @@ function resizeFromDataURL(dataUrl, size) {
 }
 
 // =========================
-// DRAG & DROP (SEGURO)
+// DRAG & DROP
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
   const dropZone = document.getElementById("drop_zone");
@@ -237,6 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   inputFile.addEventListener("change", previewFiles);
+
   dropZone.addEventListener("click", () => {
     inputFile.click();
   });
