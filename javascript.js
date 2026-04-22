@@ -1,19 +1,22 @@
 // =========================
-// PREVIEW
+// PREVIEW (VISTA PREVIA DE IMÁGENES)
 // =========================
 function previewFiles() {
   const preview = document.querySelector("#preview");
   const files = document.getElementById("imageFile").files;
 
+  // Limpiar contenido anterior
   preview.innerHTML = "";
   document.getElementById("image_select").innerHTML = "";
   document.getElementById("prev_span").innerText = "Choose an image";
 
+  // Mostrar imágenes si hay archivos
   if (files.length > 0) {
     [].forEach.call(files, readAndPreview);
   }
 }
 
+// Lee cada archivo y lo muestra en pantalla
 function readAndPreview(file, index) {
   const preview = document.querySelector("#preview");
 
@@ -29,10 +32,12 @@ function readAndPreview(file, index) {
     image.dataset.index = index;
     image.title = file.name;
 
+    // La primera imagen queda seleccionada por defecto
     if (index === 0) {
       image.classList.add("active");
     }
 
+    // Permite seleccionar imagen al hacer click
     image.addEventListener("click", () => {
       document
         .querySelectorAll(".preview_img")
@@ -49,7 +54,7 @@ function readAndPreview(file, index) {
 }
 
 // =========================
-// RESIZE PREVIEW
+// REDIMENSIONAR IMAGEN SELECCIONADA (SOLO PREVIEW)
 // =========================
 function resizeImage(max_width, max_height) {
   const prev_span = document.getElementById("prev_span");
@@ -78,12 +83,13 @@ function resizeImage(max_width, max_height) {
 }
 
 // =========================
-// DOWNLOAD ZIP + PROGRESS
+// PROCESAR Y DESCARGAR ZIP
 // =========================
 async function download_main() {
   const button = document.querySelector(".success");
   const files = document.getElementById("imageFile").files;
 
+  // Validación
   if (!files.length) {
     alert("Sube al menos una imagen");
     return;
@@ -98,8 +104,8 @@ async function download_main() {
   const progressBar = document.getElementById("progress_bar");
   const progressText = document.getElementById("progress_text");
 
+  // Calcular tareas totales (para progreso)
   let totalTasks = 0;
-
   for (let file of files) {
     let name = file.name.replace(/\.[^.$]+$/, "");
     const isResizable = /-\d+_/.test(name);
@@ -116,48 +122,63 @@ async function download_main() {
 
   try {
     // =========================
-    // 🔥 DETECTAR CÓDIGO BASE AUTOMÁTICO
-    // =========================
-    let baseCodeGlobal = null;
-
-    for (let file of files) {
-      let name = file.name.replace(/\.[^.$]+$/, "");
-
-      if (!name.includes("-") && name.length > 13) {
-        baseCodeGlobal = name;
-        break;
-      }
-    }
-
-    // fallback por si no encuentra (seguridad)
-    if (!baseCodeGlobal) {
-      baseCodeGlobal = "sin_codigo";
-    }
-
-    // =========================
-    // PROCESAR ARCHIVOS
+    // PROCESAR CADA ARCHIVO
     // =========================
     for (let file of files) {
       let name = file.name.replace(/\.[^.$]+$/, "");
+
+      // Detecta si es imagen que se debe redimensionar
       const isResizable = /-\d+_/.test(name);
+
+      // Leer archivo como base64
       const dataUrlOriginal = await readFile(file);
 
       let baseCode;
 
+      // 🔥 CASO 1: imágenes normales (producto)
       if (isResizable) {
-        baseCode = name.split("-")[0];
-      } else {
-        baseCode = baseCodeGlobal;
+        baseCode = name.split("-")[0]; // código principal
+      }
+      // 🔥 CASO 2: etiquetas / colores
+      else {
+        let match = name.match(/\d{10,}/); // detectar código numérico largo
+
+        if (match) {
+          let shortCode = match[0];
+          let found = false;
+
+          // Buscar a qué producto pertenece
+          for (let f of files) {
+            let n = f.name.replace(/\.[^.$]+$/, "");
+
+            if (n.includes(shortCode) && n.length > shortCode.length) {
+              baseCode = n.split("-")[0];
+              found = true;
+              break;
+            }
+          }
+
+          // Si no encuentra coincidencia
+          if (!found) {
+            baseCode = shortCode;
+          }
+        } else {
+          baseCode = "otros";
+        }
       }
 
+      // Crear carpeta por producto
       let folder = zip.folder("imagenes/" + baseCode);
 
+      // 🔹 Si NO se redimensiona → guardar directo
       if (!isResizable) {
         folder.file(name + ".webp", dataUrlOriginal.split(",")[1], {
           base64: true,
         });
         completed++;
-      } else {
+      } 
+      // 🔹 Si se redimensiona → crear múltiples tamaños
+      else {
         for (let size of sizes) {
           let dataUrl = await resizeFromDataURL(dataUrlOriginal, size);
 
@@ -171,6 +192,7 @@ async function download_main() {
         }
       }
 
+      // Actualizar progreso
       let percent = Math.round((completed / totalTasks) * 100);
       progressBar.style.width = percent + "%";
       progressText.innerText = percent + "% procesado";
@@ -178,8 +200,10 @@ async function download_main() {
 
     progressText.innerText = "Comprimiendo...";
 
+    // Generar ZIP
     const content = await zip.generateAsync({ type: "blob" });
 
+    // Descargar
     const url = URL.createObjectURL(content);
     const link = document.createElement("a");
 
@@ -206,6 +230,8 @@ async function download_main() {
 // =========================
 // HELPERS
 // =========================
+
+// Leer archivo como base64
 function readFile(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -214,6 +240,7 @@ function readFile(file) {
   });
 }
 
+// Redimensionar imagen usando canvas
 function resizeFromDataURL(dataUrl, size) {
   return new Promise((resolve) => {
     const image = new Image();
@@ -225,6 +252,7 @@ function resizeFromDataURL(dataUrl, size) {
       let width = image.width;
       let height = image.height;
 
+      // Mantener proporción
       if (width > height) {
         if (width > size) {
           height *= size / width;
@@ -258,26 +286,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!dropZone || !inputFile) return;
 
+  // Cuando arrastras encima
   dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropZone.classList.add("active");
   });
 
+  // Cuando sales del área
   dropZone.addEventListener("dragleave", () => {
     dropZone.classList.remove("active");
   });
 
+  // Cuando sueltas archivos
   dropZone.addEventListener("drop", (e) => {
     e.preventDefault();
 
-    inputFile.files = e.dataTransfer.files;
-    previewFiles();
-    e.dataTransfer.clearData();
+    const files = e.dataTransfer.files;
+
+    if (files.length) {
+      const dt = new DataTransfer();
+
+      // Pasar archivos al input (hack necesario)
+      for (let file of files) {
+        dt.items.add(file);
+      }
+
+      inputFile.files = dt.files;
+      previewFiles();
+    }
+
     dropZone.classList.remove("active");
   });
 
+  // Input normal
   inputFile.addEventListener("change", previewFiles);
 
+  // Click en zona abre selector
   dropZone.addEventListener("click", () => {
     inputFile.click();
   });
