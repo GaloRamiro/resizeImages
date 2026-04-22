@@ -4,75 +4,83 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Resize images</title>
+    <link rel="icon" href="imagenes/LogoClickcreativo.svg">
+    <title>Optimizar imágenes online | Image Tool</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="styles.css" type="text/css" />
     <script src="javascript.js" defer></script>
   </head>
   <body>
-    <div class="divTitle">
-      <h2>Resize Images</h2>
-      <p class="subtitle">Sube una imagen y elige el tamaño</p>
-    </div>
+    <div class="app_container">
+      <!-- HEADER -->
+      <div class="top_bar">
+        <h2>Optimiza tus imágenes en segundos</h2>
+        <p>
+          Reduce peso, genera tamaños y descarga todo en un ZIP automáticamente
+        </p>
+      </div>
 
-    <div class="display_main">
-      <div class="item1">
-        <div class="col s12">
-          <ul class="list_width">
-            <li class="tab"><a href="#test0">Original</a></li>
-            <li class="tab">
-              <a href="#test1" onclick="resizeImage(515, 515)">515 px</a>
-            </li>
-            <li class="tab">
-              <a href="#test2" onclick="resizeImage(300, 300)">300 px</a>
-            </li>
-            <li class="tab">
-              <a href="#test3" onclick="resizeImage(96, 96)">96 px</a>
-            </li>
-            <li class="tab">
-              <a href="#test4" onclick="resizeImage(65, 65)">65 px</a>
-            </li>
-            <li class="tab">
-              <a href="#test5" onclick="resizeImage(30, 30)">30 px</a>
-            </li>
-          </ul>
-        </div>
+      <!-- DROP ZONE -->
+      <div id="drop_zone" class="drop_zone">
+        <p>📂 Arrastra imágenes aquí o haz clic</p>
 
-        <div id="test0" class="test_0">
-          <div id="drop_zone" class="drop_zone">
-            <p>Arrastra imágenes aquí o haz click</p>
-            <input
-              id="imageFile"
-              name="imageFile"
-              type="file"
-              class="imageFile"
-              accept="image/*"
-              multiple
-            />
+        <input
+          id="imageFile"
+          name="imageFile"
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+        />
+      </div>
+      <p class="hint">
+        Soporta múltiples imágenes. Ideal para ecommerce y diseño web.
+      </p>
+      <!-- WORKSPACE -->
+      <div class="workspace">
+        <!-- IZQUIERDA -->
+        <div class="preview_section">
+          <h3>Imágenes</h3>
+          <div id="preview" class="image_preview">
+            <p class="empty_state">No hay imágenes cargadas</p>
           </div>
         </div>
-      </div>
 
-      <div class="item2">
-        <div class="optionsDownload">
-          <span id="prev_span">Choose an image</span>
+        <!-- DERECHA -->
+        <div class="controls_section">
+          <h3>Vista previa</h3>
+
+          <span id="prev_span">Selecciona una imagen</span>
           <div id="image_select" class="image_select"></div>
-          <div id="images_download" class="images_download"></div>
+
+          <!-- BOTONES DE TAMAÑO -->
+          <div class="sizes">
+            <button onclick="resizeImage(515, 515)">515</button>
+            <button onclick="resizeImage(300, 300)">300</button>
+            <button onclick="resizeImage(96, 96)">96</button>
+            <button onclick="resizeImage(65, 65)">65</button>
+            <button onclick="resizeImage(30, 30)">30</button>
+          </div>
+
+          <!-- PROGRESO -->
+          <div class="progress_container">
+            <div id="progress_bar"></div>
+          </div>
+          <span id="progress_text"></span>
+
+          <!-- DESCARGA -->
+          <button class="success" onclick="download_main()">
+            Optimizar y descargar imágenes
+          </button>
+
+          <div id="loader" class="loader hidden"></div>
+          <ul class="mini-info">
+            <li>✔ Convierte a WEBP automáticamente</li>
+            <li>✔ Reduce peso sin perder calidad</li>
+            <li>✔ Genera múltiples tamaños</li>
+          </ul>
         </div>
-
-        <div id="preview" class="image_preview"></div>
       </div>
-    </div>
-
-    <div class="divButton">
-      <button class="success" type="button" onclick="download_main()">
-        Download Images
-      </button>
-
-      <div class="progress_container">
-        <div id="progress_bar" class="progress_bar"></div>
-      </div>
-      <p id="progress_text" class="progress_text"></p>
     </div>
   </body>
 </html>

@@ -103,7 +103,8 @@ async function download_main() {
 
   progressBar.style.width = "0%";
   progressText.innerText = "Procesando imágenes...";
-
+  const loader = document.getElementById("loader");
+  loader.classList.remove("hidden");
   try {
     // 🔥 TODO EL PROCESO VA AQUÍ
     for (let file of files) {
@@ -158,6 +159,8 @@ async function download_main() {
     button.disabled = false;
     button.innerText = "Download Images";
   }
+
+  loader.classList.add("hidden");
 }
 
 // =========================
