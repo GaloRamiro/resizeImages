@@ -134,8 +134,27 @@ async function download_main() {
       // Leer archivo como base64
       const dataUrlOriginal = await readFile(file);
 
-      //  CASO 1: imágenes normales (producto)
-      const baseCode = name.split("-")[0];
+      let baseCodeRaw = name.split("-")[0];
+
+      // 🔥 quitar ceros solo para comparar
+      let clean = baseCodeRaw.replace(/^0+/, "");
+
+      // 🔥 buscar si existe una versión larga en los archivos
+      let baseCode = baseCodeRaw;
+
+      for (let f of files) {
+        let n = f.name.replace(/\.[^.$]+$/, "");
+        let possible = n.split("-")[0];
+
+        if (possible.startsWith("00000")) {
+          let short = possible.replace(/^0+/, "");
+
+          if (short === clean) {
+            baseCode = possible; // usa el código largo
+            break;
+          }
+        }
+      }
 
       // Crear carpeta por producto
       let folder = zip.folder("imagenes/" + baseCode);
@@ -151,7 +170,7 @@ async function download_main() {
         for (let size of sizes) {
           let dataUrl = await resizeFromDataURL(dataUrlOriginal, size);
 
-         let newName = name.replace(/-1200_/, "-" + size + "_") + ".webp";
+          let newName = name.replace(/-1200_/, "-" + size + "_") + ".webp";
 
           folder.file(newName, dataUrl.split(",")[1], {
             base64: true,
