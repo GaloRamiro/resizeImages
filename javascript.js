@@ -108,8 +108,9 @@ async function download_main() {
   let totalTasks = 0;
   for (let file of files) {
     let name = file.name.replace(/\.[^.$]+$/, "");
-    const isResizable = /-\d+_/.test(name);
-    totalTasks += isResizable ? sizes.length : 1;
+    //cambio para que detecte los valores con -1200
+    const is1200 = /-1200_\d+/.test(name);
+    totalTasks += is1200 ? sizes.length + 1 : 1;
   }
 
   let completed = 0;
@@ -128,61 +129,29 @@ async function download_main() {
       let name = file.name.replace(/\.[^.$]+$/, "");
 
       // Detecta si es imagen que se debe redimensionar
-      const isResizable = /-\d+_/.test(name);
+      const is1200 = /-1200_\d+/.test(name);
 
       // Leer archivo como base64
       const dataUrlOriginal = await readFile(file);
 
-      let baseCode;
-
-      // 🔥 CASO 1: imágenes normales (producto)
-      if (isResizable) {
-        baseCode = name.split("-")[0]; // código principal
-      }
-      // 🔥 CASO 2: etiquetas / colores
-      else {
-        let match = name.match(/\d{10,}/); // detectar código numérico largo
-
-        if (match) {
-          let shortCode = match[0];
-          let found = false;
-
-          // Buscar a qué producto pertenece
-          for (let f of files) {
-            let n = f.name.replace(/\.[^.$]+$/, "");
-
-            if (n.includes(shortCode) && n.length > shortCode.length) {
-              baseCode = n.split("-")[0];
-              found = true;
-              break;
-            }
-          }
-
-          // Si no encuentra coincidencia
-          if (!found) {
-            baseCode = shortCode;
-          }
-        } else {
-          baseCode = "otros";
-        }
-      }
+      //  CASO 1: imágenes normales (producto)
+      const baseCode = name.split("-")[0];
 
       // Crear carpeta por producto
       let folder = zip.folder("imagenes/" + baseCode);
 
-      // 🔹 Si NO se redimensiona → guardar directo
-      if (!isResizable) {
+      // 🔹 Si es imagen 1200 → generar tamaños
+      if (is1200) {
+        // ✅ GUARDAR ORIGINAL (esto faltaba)
         folder.file(name + ".webp", dataUrlOriginal.split(",")[1], {
           base64: true,
         });
+
         completed++;
-      } 
-      // 🔹 Si se redimensiona → crear múltiples tamaños
-      else {
         for (let size of sizes) {
           let dataUrl = await resizeFromDataURL(dataUrlOriginal, size);
 
-          let newName = name.replace(/-\d+_/, "-" + size + "_") + ".webp";
+         let newName = name.replace(/-1200_/, "-" + size + "_") + ".webp";
 
           folder.file(newName, dataUrl.split(",")[1], {
             base64: true,
@@ -190,6 +159,13 @@ async function download_main() {
 
           completed++;
         }
+      }
+      // 🔹 Si NO es 1200 → guardar tal cual (etiquetas)
+      else {
+        folder.file(name + ".webp", dataUrlOriginal.split(",")[1], {
+          base64: true,
+        });
+        completed++;
       }
 
       // Actualizar progreso
