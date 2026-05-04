@@ -366,3 +366,24 @@ document.addEventListener("DOMContentLoaded", () => {
     inputFile.click();
   });
 });
+
+
+function login() {
+  const user = document.getElementById("user").value;
+  const pass = document.getElementById("pass").value;
+
+  // 🔥 usuarios permitidos
+  const usuarios = [
+    { user: "admin", pass: "1234" },
+    { user: "galo", pass: "5678" }
+  ];
+
+  const valido = usuarios.find(u => u.user === user && u.pass === pass);
+
+  if (valido) {
+    document.getElementById("login_container").style.display = "none";
+    document.querySelector(".app_container").style.display = "block";
+  } else {
+    document.getElementById("login_error").innerText = "Usuario o contraseña incorrectos";
+  }
+}

@@ -11,7 +11,20 @@
     <script src="javascript.js" defer></script>
   </head>
   <body>
-    <div class="app_container">
+    <div id="login_container" class="login_container">
+      <h2>Iniciar sesión</h2>
+
+      <input type="text" id="user" placeholder="Usuario" />
+      <input type="password" id="pass" placeholder="Contraseña" />
+      
+
+      <button onclick="login()">Ingresar</button>
+
+      <p id="login_error"></p>
+    </div>
+
+
+    <div class="app_container" style="display:none;">
       <!-- HEADER -->
       <div class="top_bar">
         <h2>Optimiza tus imágenes en segundos</h2>
