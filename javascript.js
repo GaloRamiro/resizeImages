@@ -5,12 +5,36 @@ function previewFiles() {
   const preview = document.querySelector("#preview");
   const files = document.getElementById("imageFile").files;
 
-  // Limpiar contenido anterior
+  // 🔥 CONTAR SOLO 1200
+  let resultado = contarSolo1200(files);
+  let total = 0;
+
+  for (let codigo in resultado) {
+    total += resultado[codigo];
+  }
+
+  // 🔥 MOSTRAR / OCULTAR
+  let contenedor = document.getElementById("total_imagenes");
+
+  if (total > 0) {
+    contenedor.style.display = "block";
+    contenedor.innerText = `✔ ${total} imágenes listas`;
+  } else {
+    contenedor.style.display = "none";
+  }
+
+  console.log("Conteo 1200:", resultado);
+
+  // -------------------------
+  // LIMPIAR UI
+  // -------------------------
   preview.innerHTML = "";
   document.getElementById("image_select").innerHTML = "";
   document.getElementById("prev_span").innerText = "Choose an image";
 
-  // Mostrar imágenes si hay archivos
+  // -------------------------
+  // MOSTRAR IMÁGENES
+  // -------------------------
   if (files.length > 0) {
     [].forEach.call(files, readAndPreview);
   }
@@ -270,6 +294,27 @@ function resizeFromDataURL(dataUrl, size) {
 
     image.src = dataUrl;
   });
+}
+
+function contarSolo1200(files) {
+  let conteo = {};
+
+  for (let file of files) {
+    let name = file.name.replace(/\.[^.$]+$/, "");
+
+    if (/-1200_\d+$/.test(name)) {
+      let base = name.split("-")[0];
+      let codigo = base.replace(/^0+/, "");
+
+      if (!conteo[codigo]) {
+        conteo[codigo] = 0;
+      }
+
+      conteo[codigo]++;
+    }
+  }
+
+  return conteo;
 }
 
 // =========================
