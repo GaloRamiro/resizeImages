@@ -236,6 +236,20 @@ async function download_main() {
     URL.revokeObjectURL(url);
 
     progressText.innerText = "✅ Descarga completa";
+
+    let resultado = contarSolo1200(files);
+
+    let total = 0;
+    for (let codigo in resultado) {
+      total += resultado[codigo];
+    }
+
+    try {
+      await guardarUso(usuarioActual || "invitado", total);
+      cargarHistorial(usuarioActual || "invitado");
+    } catch (e) {
+      console.error("Error guardando en Firebase:", e);
+    }
   } catch (error) {
     console.error(error);
     progressText.innerText = "❌ Error al procesar imágenes";
@@ -367,23 +381,29 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+let usuarioActual = null;
 
 function login() {
   const user = document.getElementById("user").value;
   const pass = document.getElementById("pass").value;
 
-  // 🔥 usuarios permitidos
   const usuarios = [
     { user: "admin", pass: "1234" },
-    { user: "galo", pass: "5678" }
+    { user: "galo", pass: "5678" },
   ];
 
-  const valido = usuarios.find(u => u.user === user && u.pass === pass);
+  const valido = usuarios.find((u) => u.user === user && u.pass === pass);
 
   if (valido) {
+    usuarioActual = user;
+
     document.getElementById("login_container").style.display = "none";
     document.querySelector(".app_container").style.display = "block";
+
+    // 🔥 ESTA LÍNEA FALTABA
+    cargarHistorial(usuarioActual);
   } else {
-    document.getElementById("login_error").innerText = "Usuario o contraseña incorrectos";
+    document.getElementById("login_error").innerText =
+      "Usuario o contraseña incorrectos";
   }
 }

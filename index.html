@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="imagenes/LogoTamaños.svg" />
+    <script type="module" src="firebase.js"></script>
     <title>Optimizar imágenes online | Image Tool</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="styles.css" type="text/css" />
@@ -16,15 +17,13 @@
 
       <input type="text" id="user" placeholder="Usuario" />
       <input type="password" id="pass" placeholder="Contraseña" />
-      
 
       <button onclick="login()">Ingresar</button>
 
       <p id="login_error"></p>
     </div>
 
-
-    <div class="app_container" style="display:none;">
+    <div class="app_container" style="display: none">
       <!-- HEADER -->
       <div class="top_bar">
         <h2>Optimiza tus imágenes en segundos</h2>
@@ -94,6 +93,10 @@
             <li>✔ Genera múltiples tamaños</li>
           </ul>
         </div>
+      </div>
+      <div id="dashboard">
+        <h3>📊 Actividad</h3>
+        <div id="timeline"></div>
       </div>
     </div>
   </body>
