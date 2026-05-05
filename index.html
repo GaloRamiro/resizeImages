@@ -8,6 +8,7 @@
     <script type="module" src="firebase.js"></script>
     <title>Optimizar imágenes online | Image Tool</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="styles.css" type="text/css" />
     <script src="javascript.js" defer></script>
   </head>
@@ -18,7 +19,7 @@
       <input type="text" id="user" placeholder="Usuario" />
       <input type="password" id="pass" placeholder="Contraseña" />
 
-      <button onclick="login()">Ingresar</button>
+      <button id="btnLogin">Ingresar</button>
 
       <p id="login_error"></p>
     </div>
@@ -95,8 +96,9 @@
         </div>
       </div>
       <div id="dashboard">
-        <h3>📊 Actividad</h3>
-        <div id="timeline"></div>
+        <h3> Actividad</h3>
+       
+        <canvas id="graficoUso"></canvas>
       </div>
     </div>
   </body>

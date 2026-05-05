@@ -1,3 +1,4 @@
+
 // =========================
 // PREVIEW (VISTA PREVIA DE IMÁGENES)
 // =========================
@@ -383,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let usuarioActual = null;
 
-function login() {
+window.login = function() {
   const user = document.getElementById("user").value;
   const pass = document.getElementById("pass").value;
 
@@ -407,3 +408,12 @@ function login() {
       "Usuario o contraseña incorrectos";
   }
 }
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("btnLogin");
+
+  if (btn) {
+    btn.addEventListener("click", login);
+  }
+});

@@ -49,32 +49,89 @@ window.cargarHistorial = async function (usuario) {
     const q = query(
       collection(db, "usos"),
       where("usuario", "==", usuario),
-      orderBy("fecha", "desc"),
+      //orderBy("fecha", "asc"), // 👈 importante para gráfica
     );
 
-    const querySnapshot = await getDocs(q);
+    let querySnapshot;
+
+    try {
+      querySnapshot = await getDocs(q);
+    } catch (error) {
+      console.log("⏳ Esperando índice de Firebase...");
+      return;
+    }
 
     const timeline = document.getElementById("timeline");
-    timeline.innerHTML = "";
+
+    if (timeline) {
+      timeline.innerHTML = "";
+    }
+
+    if (querySnapshot.empty) {
+      timeline.innerHTML = "<p>No hay actividad todavía</p>";
+      return;
+    }
+
+    let labels = [];
+    let data = [];
 
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      const fecha = data.fecha?.toDate
-        ? data.fecha.toDate().toLocaleString()
-        : new Date(data.fecha).toLocaleString();
+      const d = doc.data();
 
+      const fecha = d.fecha?.toDate ? d.fecha.toDate() : new Date(d.fecha);
+
+      const fechaTexto = fecha.toLocaleString();
+
+      // 🔹 TIMELINE
       const item = document.createElement("div");
       item.className = "timeline_item";
 
       item.innerHTML = `
         <div class="dot"></div>
         <div class="content">
-          <p><strong>${data.cantidad} imágenes</strong></p>
-          <span>${fecha}</span>
+          <p><strong>${d.cantidad} imágenes</strong></p>
+          <span>${fechaTexto}</span>
         </div>
       `;
 
-      timeline.appendChild(item);
+      if (timeline) {
+        timeline.appendChild(item);
+      }
+
+      // 🔹 DATOS PARA GRÁFICA
+      labels.push(fecha.toLocaleDateString());
+      data.push(d.cantidad);
+    });
+
+    // 🔥 CREAR GRÁFICA
+    const ctx = document.getElementById("graficoUso").getContext("2d");
+
+    // destruir si ya existe
+    if (window.miGrafico) {
+      window.miGrafico.destroy();
+    }
+    let total = data.reduce((acc, val) => acc + val, 0);
+    window.miGrafico = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: `Total: ${total} imágenes`,
+            data: data,
+            fill: true,
+            tension: 0.4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: true,
+          },
+        },
+      },
     });
   } catch (error) {
     console.error("Error cargando historial:", error);
