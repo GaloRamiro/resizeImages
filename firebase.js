@@ -67,13 +67,14 @@ window.cargarHistorial = async function (usuario) {
       timeline.innerHTML = "";
     }
 
-    if (querySnapshot.empty) {
-      timeline.innerHTML = "<p>No hay actividad todavía</p>";
-      return;
-    }
+ if (querySnapshot.empty) {
+  if (timeline) {
+    timeline.innerHTML = "<p>No hay actividad todavía</p>";
+  }
+  return;
+}
 
-    let labels = [];
-    let data = [];
+    let registros = [];
 
     querySnapshot.forEach((doc) => {
       const d = doc.data();
@@ -82,57 +83,111 @@ window.cargarHistorial = async function (usuario) {
 
       const fechaTexto = fecha.toLocaleString();
 
-      // 🔹 TIMELINE
-      const item = document.createElement("div");
-      item.className = "timeline_item";
-
-      item.innerHTML = `
-        <div class="dot"></div>
-        <div class="content">
-          <p><strong>${d.cantidad} imágenes</strong></p>
-          <span>${fechaTexto}</span>
-        </div>
-      `;
-
+      // timeline (opcional)
       if (timeline) {
+        const item = document.createElement("div");
+        item.className = "timeline_item";
+
+        item.innerHTML = `
+      <div class="dot"></div>
+      <div class="content">
+        <p><strong>${d.cantidad} imágenes</strong></p>
+        <span>${fechaTexto}</span>
+      </div>
+    `;
+
         timeline.appendChild(item);
       }
 
-      // 🔹 DATOS PARA GRÁFICA
-      labels.push(fecha.toLocaleDateString());
-      data.push(d.cantidad);
+      // 👉 SOLO GUARDAR
+      registros.push({
+        fecha: fecha,
+        cantidad: d.cantidad,
+      });
     });
+    // ordenar por fecha
+    registros.sort((a, b) => a.fecha - b.fecha);
 
-    // 🔥 CREAR GRÁFICA
-    const ctx = document.getElementById("graficoUso").getContext("2d");
 
-    // destruir si ya existe
-    if (window.miGrafico) {
-      window.miGrafico.destroy();
-    }
-    let total = data.reduce((acc, val) => acc + val, 0);
-    window.miGrafico = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            label: `Total: ${total} imágenes`,
-            data: data,
-            fill: true,
-            tension: 0.4,
-          },
-        ],
+
+// convertir a arrays
+// 🔥 AGRUPAR POR DÍA
+let agrupado = {};
+
+registros.forEach((r) => {
+ let dia = r.fecha.toISOString().split("T")[0]; // yyyy-mm-dd
+
+  if (!agrupado[dia]) {
+    agrupado[dia] = 0;
+  }
+
+  agrupado[dia] += r.cantidad;
+});
+
+// convertir a arrays
+// 🔥 convertir a array ordenado por fecha
+let ordenado = Object.keys(agrupado)
+.map((fecha) => {
+  const [year, month, day] = fecha.split("-");
+
+  return {
+    fecha: new Date(year, month - 1, day), // 👈 LOCAL (no UTC)
+    valor: agrupado[fecha],
+  };
+})
+  .sort((a, b) => a.fecha - b.fecha);
+
+// labels y valores ordenados
+let labels = ordenado.map((e) => {
+  const f = new Date(e.fecha);
+  return f.toLocaleDateString("es-EC");
+});
+
+let valores = ordenado.map((e) => e.valor);
+
+// ✅ TOTAL REAL
+let total = valores.reduce((acc, val) => acc + val, 0);
+
+// 🔥 ACUMULADO PARA GRÁFICA
+let data = [];
+let suma = 0;
+
+valores.forEach((v) => {
+  suma += v;
+  data.push(suma);
+});
+
+
+// 🔥 CREAR GRÁFICA
+const ctx = document.getElementById("graficoUso").getContext("2d");
+
+// destruir si ya existe
+if (window.miGrafico) {
+  window.miGrafico.destroy();
+}
+
+window.miGrafico = new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: labels,
+    datasets: [
+      {
+        label: `Total: ${total} imágenes`,
+        data: data,
+        fill: true,
+        tension: 0.4,
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            display: true,
-          },
-        },
+    ],
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
       },
-    });
+    },
+  },
+});
   } catch (error) {
     console.error("Error cargando historial:", error);
   }
