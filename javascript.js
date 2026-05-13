@@ -1,4 +1,3 @@
-
 // =========================
 // PREVIEW (VISTA PREVIA DE IMÁGENES)
 // =========================
@@ -134,7 +133,7 @@ async function download_main() {
   for (let file of files) {
     let name = file.name.replace(/\.[^.$]+$/, "");
     //cambio para que detecte los valores con -1200
-    const is1200 = /-1200_\d+/.test(name);
+    const is1200 = /-1200(?:_[A-Z]+)?_\d+$/i.test(name);
     totalTasks += is1200 ? sizes.length + 1 : 1;
   }
 
@@ -154,30 +153,32 @@ async function download_main() {
       let name = file.name.replace(/\.[^.$]+$/, "");
 
       // Detecta si es imagen que se debe redimensionar
-      const is1200 = /-1200_\d+/.test(name);
+      const is1200 = /-1200(?:_[A-Z]+)?_\d+$/i.test(name);
 
       // Leer archivo como base64
       const dataUrlOriginal = await readFile(file);
 
       let baseCodeRaw = name.split("-")[0];
 
-      // 🔥 quitar ceros solo para comparar
-      let clean = baseCodeRaw.replace(/^0+/, "");
-
-      // 🔥 buscar si existe una versión larga en los archivos
       let baseCode = baseCodeRaw;
 
+      // 🔥 BUSCAR CARPETA PADRE REAL
       for (let f of files) {
         let n = f.name.replace(/\.[^.$]+$/, "");
         let possible = n.split("-")[0];
 
-        if (possible.startsWith("00000")) {
-          let short = possible.replace(/^0+/, "");
+        // comparar quitando ceros
+        let cleanPossible = possible.replace(/^0+/, "");
+        let cleanBase = baseCodeRaw.replace(/^0+/, "");
 
-          if (short === clean) {
-            baseCode = possible; // usa el código largo
-            break;
-          }
+        // SOLO usar códigos que empiezan con 0 como carpetas padre
+        if (
+          possible.startsWith("0") &&
+          cleanPossible === cleanBase &&
+          possible.length >= baseCodeRaw.length
+        ) {
+          baseCode = possible;
+          break;
         }
       }
 
@@ -317,9 +318,9 @@ function contarSolo1200(files) {
   for (let file of files) {
     let name = file.name.replace(/\.[^.$]+$/, "");
 
-    if (/-1200_\d+$/.test(name)) {
+    if (/-1200(?:_[A-Z]+)?_\d+$/i.test(name)) {
       let base = name.split("-")[0];
-      let codigo = base.replace(/^0+/, "");
+      let codigo = base;
 
       if (!conteo[codigo]) {
         conteo[codigo] = 0;
@@ -384,7 +385,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let usuarioActual = null;
 
-window.login = function() {
+window.login = function () {
   const user = document.getElementById("user").value;
   const pass = document.getElementById("pass").value;
 
@@ -407,8 +408,7 @@ window.login = function() {
     document.getElementById("login_error").innerText =
       "Usuario o contraseña incorrectos";
   }
-}
-
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btnLogin");
