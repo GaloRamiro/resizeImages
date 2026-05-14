@@ -147,15 +147,11 @@ let valores = ordenado.map((e) => e.valor);
 
 // ✅ TOTAL REAL
 let total = valores.reduce((acc, val) => acc + val, 0);
-
+if (totalGlobal) {
+  totalGlobal.innerText = `📦 Total histórico: ${total} imágenes`;
+}
 // 🔥 ACUMULADO PARA GRÁFICA
-let data = [];
-let suma = 0;
-
-valores.forEach((v) => {
-  suma += v;
-  data.push(suma);
-});
+let data = valores;
 
 
 // 🔥 CREAR GRÁFICA

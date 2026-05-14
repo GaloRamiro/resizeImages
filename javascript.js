@@ -3,7 +3,49 @@
 // =========================
 function previewFiles() {
   const preview = document.querySelector("#preview");
+  const botonDescarga = document.querySelector(".success");
+  ///
+  ///
+  ///
   const files = document.getElementById("imageFile").files;
+  botonDescarga.disabled = false;
+  botonDescarga.innerText = "Optimizar y descargar imágenes";
+
+  // 🔥 VALIDAR SOLO ETIQUETAS BASE
+  let errores = [];
+
+  for (let file of files) {
+    let nombre = file.name.replace(/\.[^.$]+$/, "");
+
+    // 🔥 IGNORAR IMÁGENES -1200
+    if (nombre.includes("-1200")) {
+      continue;
+    }
+
+    // 🔥 IGNORAR COLORES
+    if (nombre.startsWith("5")) {
+      continue;
+    }
+
+    // validar longitud
+    if (nombre.length !== 18) {
+      errores.push(`❌ ${nombre} → tiene ${nombre.length} caracteres`);
+    }
+  }
+
+  if (errores.length > 0) {
+    alert("⚠ Etiquetas incorrectas:\n\n" + errores.join("\n"));
+
+    // bloquear botón
+    botonDescarga.disabled = true;
+    botonDescarga.innerText = "Corrige las etiquetas";
+
+    return;
+  } else {
+    // habilitar si todo está bien
+    botonDescarga.disabled = false;
+    botonDescarga.innerText = "Optimizar y descargar imágenes";
+  }
 
   // 🔥 CONTAR SOLO 1200
   let resultado = contarSolo1200(files);
@@ -238,7 +280,19 @@ async function download_main() {
     URL.revokeObjectURL(url);
 
     progressText.innerText = "✅ Descarga completa";
+    // 🔥 LIMPIAR TODO DESPUÉS DE DESCARGAR
+    document.getElementById("preview").innerHTML =
+      '<p class="empty_state">No hay imágenes cargadas</p>';
 
+    document.getElementById("image_select").innerHTML = "";
+
+    document.getElementById("prev_span").innerText = "Selecciona una imagen";
+
+    document.getElementById("imageFile").value = "";
+
+    document.getElementById("total_imagenes").style.display = "none";
+
+    progressBar.style.width = "0%";
     let resultado = contarSolo1200(files);
 
     let total = 0;
