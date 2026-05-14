@@ -280,6 +280,14 @@ async function download_main() {
     URL.revokeObjectURL(url);
 
     progressText.innerText = "✅ Descarga completa";
+    // 🔥 CONTAR ANTES DE LIMPIAR
+    let resultado = contarSolo1200(files);
+
+    let total = 0;
+
+    for (let codigo in resultado) {
+      total += resultado[codigo];
+    }
     // 🔥 LIMPIAR TODO DESPUÉS DE DESCARGAR
     document.getElementById("preview").innerHTML =
       '<p class="empty_state">No hay imágenes cargadas</p>';
@@ -293,12 +301,7 @@ async function download_main() {
     document.getElementById("total_imagenes").style.display = "none";
 
     progressBar.style.width = "0%";
-    let resultado = contarSolo1200(files);
-
-    let total = 0;
-    for (let codigo in resultado) {
-      total += resultado[codigo];
-    }
+  
 
     try {
       await guardarUso(usuarioActual || "invitado", total);
@@ -311,7 +314,7 @@ async function download_main() {
     progressText.innerText = "❌ Error al procesar imágenes";
   } finally {
     button.disabled = false;
-    button.innerText = "Download Images";
+    button.innerText = "Descargar imágenes";
     if (loader) loader.classList.add("hidden");
   }
 }
