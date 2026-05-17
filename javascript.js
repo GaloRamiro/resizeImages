@@ -1,6 +1,9 @@
 // =========================
 // PREVIEW (VISTA PREVIA DE IMÁGENES)
 // =========================
+
+let correcciones = {};
+let totalErrores = 0;
 function previewFiles() {
   const preview = document.querySelector("#preview");
   const botonDescarga = document.querySelector(".success");
@@ -13,6 +16,8 @@ function previewFiles() {
 
   // 🔥 VALIDAR SOLO ETIQUETAS BASE
   let errores = [];
+  let erroresDetalle = [];
+  totalErrores = 0;
 
   for (let file of files) {
     let nombre = file.name.replace(/\.[^.$]+$/, "");
@@ -30,19 +35,23 @@ function previewFiles() {
     // validar longitud
     if (nombre.length !== 18) {
       errores.push(`❌ ${nombre} → tiene ${nombre.length} caracteres`);
+      totalErrores++;
+      erroresDetalle.push({
+        nombre: nombre,
+      });
     }
   }
 
   if (errores.length > 0) {
-    alert("⚠ Etiquetas incorrectas:\n\n" + errores.join("\n"));
+    mostrarPanelCorreccion(erroresDetalle);
 
-    // bloquear botón
     botonDescarga.disabled = true;
     botonDescarga.innerText = "Corrige las etiquetas";
 
     return;
   } else {
-    // habilitar si todo está bien
+    document.getElementById("panelCorrecciones").innerHTML = "";
+
     botonDescarga.disabled = false;
     botonDescarga.innerText = "Optimizar y descargar imágenes";
   }
@@ -301,7 +310,6 @@ async function download_main() {
     document.getElementById("total_imagenes").style.display = "none";
 
     progressBar.style.width = "0%";
-  
 
     try {
       await guardarUso(usuarioActual || "invitado", total);
@@ -474,3 +482,188 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", login);
   }
 });
+
+function mostrarPanelCorreccion(listaErrores) {
+  const panel = document.getElementById("panelCorrecciones");
+
+  panel.innerHTML = "";
+
+  const files = document.getElementById("imageFile").files;
+
+  const item = listaErrores[0];
+
+  if (!item) {
+    panel.innerHTML = "";
+
+    // 🔥 TODO CORRECTO
+    document.querySelector(".success").disabled = false;
+
+    document.querySelector(".success").innerText =
+      "Optimizar y descargar imágenes";
+
+    return;
+  }
+
+  // imagen preview
+  let imagenURL = "";
+
+  // variantes
+  let variantes = [];
+
+  for (let file of files) {
+    let nombre = file.name.replace(/\.[^.$]+$/, "");
+
+    if (nombre === item.nombre || nombre.startsWith(item.nombre + "-1200")) {
+      if (!imagenURL) {
+        imagenURL = URL.createObjectURL(file);
+      }
+    }
+
+    if (nombre.startsWith(item.nombre + "-1200")) {
+      let variante = nombre.replace(item.nombre, "");
+
+      variantes.push(variante);
+    }
+  }
+
+  const variantesHTML = variantes
+    .map((v) => {
+      return `
+      <div>
+        <strong>Prenda:</strong>
+        <span class="variante_item" data-variante="${v}">
+        </span>
+      </div>
+    `;
+    })
+    .join("");
+
+  const div = document.createElement("div");
+
+  div.className = "error_card";
+
+  div.innerHTML = `
+
+    <div class="contador_errores">
+      ⚠ Errores restantes: ${listaErrores.length}
+    </div>
+
+    <div class="error_top">
+
+      <div class="contenedor_preview">
+
+        <img src="${imagenURL}" class="error_preview">
+
+      </div>
+
+      <div class="error_info">
+
+        <p>Etiqueta incorrecta:</p>
+
+        <input 
+          type="text"
+          value="${item.nombre}"
+          maxlength="18"
+          id="input_${item.nombre}"
+          oninput="previewCorreccion('${item.nombre}')"
+        >
+
+        <div class="preview_cambios">
+
+          ${variantesHTML}
+
+          <div>
+            <strong>Color:</strong>
+            <span id="pcolor_${item.nombre}"></span>
+          </div>
+
+        </div>
+
+        <button onclick="aplicarCorreccion('${item.nombre}')">
+          Aplicar corrección
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  panel.appendChild(div);
+
+  previewCorreccion(item.nombre);
+}
+
+function aplicarCorreccion(nombreOriginal) {
+  const input = document.getElementById(`input_${nombreOriginal}`);
+
+  let nuevoCodigo = input.value.trim();
+
+  if (nuevoCodigo.length !== 18) {
+    alert("El código debe tener 18 dígitos");
+
+    return;
+  }
+
+  const inputFile = document.getElementById("imageFile");
+
+  const dt = new DataTransfer();
+
+  for (let file of inputFile.files) {
+    let nombre = file.name.replace(/\.[^.$]+$/, "");
+
+    let extension = file.name.split(".").pop();
+
+    let nuevoNombre = nombre;
+
+    // principal
+    if (nombre === nombreOriginal) {
+      nuevoNombre = nuevoCodigo;
+    }
+
+    // prendas
+    else if (nombre.startsWith(nombreOriginal + "-1200")) {
+      nuevoNombre = nombre.replace(nombreOriginal, nuevoCodigo);
+    }
+
+    // colores
+    else if (nombre.startsWith("5")) {
+      let limpioOriginal = nombreOriginal.replace(/^0+/, "");
+
+      let limpioNuevo = nuevoCodigo.replace(/^0+/, "");
+
+      if (nombre.includes(limpioOriginal)) {
+        nuevoNombre = nombre.replace(limpioOriginal, limpioNuevo);
+      }
+    }
+
+    const nuevoFile = new File([file], `${nuevoNombre}.${extension}`, {
+      type: file.type,
+    });
+
+    dt.items.add(nuevoFile);
+  }
+
+  inputFile.files = dt.files;
+
+  // 🔥 recargar
+  previewFiles();
+}
+function previewCorreccion(nombreOriginal) {
+  const input = document.getElementById(`input_${nombreOriginal}`);
+
+  if (!input) return;
+
+  let nuevoCodigo = input.value.trim();
+
+  // 🔥 actualizar prendas
+  document.querySelectorAll(".variante_item").forEach((item) => {
+    let variante = item.dataset.variante;
+
+    item.innerText = nuevoCodigo + variante;
+  });
+
+  // 🔥 color
+  let limpio = nuevoCodigo.replace(/^0+/, "");
+
+  document.getElementById(`pcolor_${nombreOriginal}`).innerText = limpio;
+}

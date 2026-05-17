@@ -354,3 +354,98 @@ body {
     transform: rotate(360deg);
   }
 }
+
+.panel_correcciones{
+  margin-top:20px;
+}
+
+.error_card{
+  background:#fff7ed;
+  border:1px solid #fdba74;
+  border-radius:12px;
+  padding:15px;
+  margin-bottom:10px;
+}
+
+.error_card p{
+  margin:0 0 10px 0;
+  font-weight:bold;
+  color:#9a3412;
+}
+
+.error_card input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  margin-bottom:10px;
+}
+
+.error_card button{
+  background:#16a34a;
+  color:white;
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.error_top{
+  display:flex;
+  gap:15px;
+  align-items:flex-start;
+}
+
+.error_preview{
+  width:120px;
+  height:120px;
+  object-fit:cover;
+  border-radius:10px;
+  border:2px solid #ddd;
+}
+
+.error_info{
+  flex:1;
+}
+
+.preview_cambios{
+  background:#fff;
+  border-radius:10px;
+  padding:10px;
+  margin-bottom:10px;
+  border:1px solid #ddd;
+}
+
+.preview_cambios div{
+  margin-bottom:8px;
+  font-size:14px;
+  word-break:break-all;
+}
+.contador_errores{
+  background:#dc2626;
+  color:white;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:15px;
+  font-weight:bold;
+  text-align:center;
+  font-size:18px;
+}
+
+.contenedor_preview{
+  overflow:hidden;
+  border-radius:14px;
+}
+
+.error_preview{
+  width:220px;
+  height:220px;
+  object-fit:cover;
+  border-radius:14px;
+  transition:0.3s;
+  cursor:zoom-in;
+}
+
+.error_preview:hover{
+  transform:scale(1.7);
+}
