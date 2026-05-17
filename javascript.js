@@ -17,6 +17,7 @@ function previewFiles() {
   // 🔥 VALIDAR SOLO ETIQUETAS BASE
   let errores = [];
   let erroresDetalle = [];
+  let codigosDetectados = new Set();
   totalErrores = 0;
 
   for (let file of files) {
@@ -34,11 +35,17 @@ function previewFiles() {
 
     // validar longitud
     if (nombre.length !== 18) {
-      errores.push(`❌ ${nombre} → tiene ${nombre.length} caracteres`);
-      totalErrores++;
-      erroresDetalle.push({
-        nombre: nombre,
-      });
+      if (!codigosDetectados.has(nombre)) {
+        codigosDetectados.add(nombre);
+
+        errores.push(`❌ ${nombre} → tiene ${nombre.length} caracteres`);
+
+        totalErrores++;
+
+        erroresDetalle.push({
+          nombre: nombre,
+        });
+      }
     }
   }
 
@@ -50,7 +57,11 @@ function previewFiles() {
 
     return;
   } else {
-    document.getElementById("panelCorrecciones").innerHTML = "";
+    const panel = document.getElementById("panelCorrecciones");
+
+    if (panel) {
+      panel.innerHTML = "";
+    }
 
     botonDescarga.disabled = false;
     botonDescarga.innerText = "Optimizar y descargar imágenes";
@@ -308,6 +319,11 @@ async function download_main() {
     document.getElementById("imageFile").value = "";
 
     document.getElementById("total_imagenes").style.display = "none";
+    const panel = document.getElementById("panelCorrecciones");
+
+    if (panel) {
+      panel.innerHTML = "";
+    }
 
     progressBar.style.width = "0%";
 
@@ -498,8 +514,7 @@ function mostrarPanelCorreccion(listaErrores) {
     // 🔥 TODO CORRECTO
     document.querySelector(".success").disabled = false;
 
-    document.querySelector(".success").innerText =
-      "Optimizar y descargar imágenes";
+    document.querySelector(".success").innerText = "Descargar imágenes";
 
     return;
   }
@@ -513,12 +528,14 @@ function mostrarPanelCorreccion(listaErrores) {
   for (let file of files) {
     let nombre = file.name.replace(/\.[^.$]+$/, "");
 
+    // preview imagen
     if (nombre === item.nombre || nombre.startsWith(item.nombre + "-1200")) {
       if (!imagenURL) {
         imagenURL = URL.createObjectURL(file);
       }
     }
 
+    // variantes reales
     if (nombre.startsWith(item.nombre + "-1200")) {
       let variante = nombre.replace(item.nombre, "");
 
@@ -598,7 +615,7 @@ function aplicarCorreccion(nombreOriginal) {
 
   let nuevoCodigo = input.value.trim();
 
-  if (nuevoCodigo.length !== 18) {
+  if (!/^\d{18}$/.test(nuevoCodigo)) {
     alert("El código debe tener 18 dígitos");
 
     return;
